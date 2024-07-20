@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/notesdb
-    username: postgres
-    password: admin
+    url: jdbc:postgresql://${DB_HOST:localhost}:5432/${DB_NAME:notesdb}
+    username: ${DB_USR_NAME:postgres}
+    password: ${DB_USR_PASS:admin}
     driverClassName: org.postgresql.Driver
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
