@@ -53,11 +53,12 @@ public class NotesServiceImpl implements NotesService{
 	}
 
 	@Override
-	public void updateNotesById(long notesId, NotesRequest notesRequest) {
+	public void updateNotesById(long notesId, long userId, NotesRequest notesRequest) {
 		
 		Notes note = notesRepository.findByNoteId(notesId).orElseThrow(() -> new RuntimeException("Note not found exception")); //create custom exception class and handler class
 		note.setNoteName(notesRequest.getNoteName());
 		note.setNoteUpdated(Instant.now());
+		
 		notesRepository.save(note);
 	}
 

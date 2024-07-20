@@ -1,12 +1,11 @@
 package com.speertechnologies.controller;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.json.MappingJacksonValue;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -20,41 +19,39 @@ import org.springframework.web.bind.annotation.RestController;
 import com.fasterxml.jackson.databind.ser.FilterProvider;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
+import com.speertechnologies.constants.NotesConstants;
 import com.speertechnologies.entity.Notes;
+import com.speertechnologies.entity.UserNotes;
 //import com.speertechnologies.entity.User;
 import com.speertechnologies.model.NotesRequest;
 import com.speertechnologies.response.NotesResponse;
-import com.speertechnologies.service.NotesService;
 import com.speertechnologies.service.UserNotesService;
-import org.springframework.security.core.userdetails.User;
+import com.speertechnologies.util.NotesUtil;
 
 @RestController
 @RequestMapping("/api/notes")
 public class NotesController {
 
 	
-	@Autowired
-	private NotesService notesService;
 	
 	@Autowired
 	private UserNotesService userNotesService;
 	
 	
 	@GetMapping
-	public ResponseEntity<NotesResponse> getAllNotesForAuthUser()
+	public MappingJacksonValue getAllNotesForAuthUser()
 	{
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		NotesResponse notesResponse= userNotesService.getNotesByUserId(Long.valueOf(user.getUsername()));
-		
-		return new ResponseEntity<NotesResponse>(notesResponse, HttpStatus.OK);
+		return NotesUtil.filterateFields(NotesConstants.NOTE_RESPONSE_FILTER, notesResponse, NotesConstants.NOTE_NAMES_FIELD_STR );
 	}
 	
 	@GetMapping("/{id}")
-	public ResponseEntity<NotesResponse> getNotesByIdForAuthUser(@PathVariable("id") Long id)
+	public MappingJacksonValue getNotesByIdForAuthUser(@PathVariable("id") Long id)
 	{
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		NotesResponse notesResponse =  userNotesService.getNotesByIdAndUserId(id,Long.valueOf(user.getUsername()));
-		return new ResponseEntity<NotesResponse>(notesResponse, HttpStatus.OK);
+		return NotesUtil.filterateFields(NotesConstants.NOTE_RESPONSE_FILTER, notesResponse, NotesConstants.NOTE_NAME_FIELD_STR );
 		
 	}
 	
@@ -62,37 +59,38 @@ public class NotesController {
 	public ResponseEntity<String> saveNotesForAuthUser(@RequestBody NotesRequest noteRequest)
 	{
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-		userNotesService.addUserNote(Long.valueOf(user.getUsername()), noteRequest);
-		
-		return new ResponseEntity<String>("Note is created successfully !!!", HttpStatus.CREATED);
+		Notes notes = userNotesService.addUserNote(Long.valueOf(user.getUsername()), noteRequest);
+		return new ResponseEntity<String>("Note is created successfully with note id - "+notes.getNoteId()+" !!!", HttpStatus.CREATED);
 		
 	}
 	
-	@PutMapping("/notes/{id}")
+	@PutMapping("/{id}")
 	public ResponseEntity<String> updateNotesByIdForAuthUser(@PathVariable Long id, @RequestBody NotesRequest noteRequest)
 	{
-		notesService.updateNotesById(id, noteRequest);
+		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		userNotesService.updateNotesById(id, Long.valueOf(user.getUsername()), noteRequest);
 		return new ResponseEntity<String>("Note is updated successfully !!!", HttpStatus.CREATED);
 		
 	}
 	
 	
-	@DeleteMapping("/notes/{id}")
+	@DeleteMapping("/{id}")
 	public ResponseEntity<String> deleteNotesByIdForAuthUser(@PathVariable Long id)
 	{
-		notesService.deleteNotesById(id);
+		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+		userNotesService.deleteNotesById(id, Long.valueOf(user.getUsername()));
 		return new ResponseEntity<String>("Note is deleted successfully !!!", HttpStatus.CREATED);
 		
 	}
 	
 	
-	@PostMapping("/notes/{id}/share")
+	@PostMapping("/{id}/share")
 	public ResponseEntity<String> shareNotesWithAnotherUser(@PathVariable("id") Long shareWithUserId, @RequestBody NotesRequest noteRequest)
 	{	
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		long createByUserId = Long.valueOf(user.getUsername());
-		userNotesService.shareNoteWithUser(noteRequest, shareWithUserId, createByUserId);
-		return new ResponseEntity<String>("Note shared successfully !!!", HttpStatus.CREATED);		
+		UserNotes userNotes = userNotesService.shareNoteWithUser(noteRequest, shareWithUserId, createByUserId);
+		return new ResponseEntity<String>("Note with note id - "+ userNotes.getUserNoteId().getNoteId() +" shared successfully with user !!!", HttpStatus.CREATED);		
 	}
 	
 	
@@ -101,15 +99,8 @@ public class NotesController {
 	{
 		User user = (User) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
 		NotesResponse notesResponse =  userNotesService.findNoteNamesByUserIdAndKeyword(Long.valueOf(user.getUsername()) , key);
-		
-		MappingJacksonValue mappingJacksonValue = new MappingJacksonValue(notesResponse);
-		
-		SimpleBeanPropertyFilter propertyFilter = SimpleBeanPropertyFilter.filterOutAllExcept("noteNames");
-		
-		FilterProvider filter = new SimpleFilterProvider().addFilter("NotesResponseFilter", propertyFilter);
-		
-		mappingJacksonValue.setFilters(filter);
-		return mappingJacksonValue;
-		//return new ResponseEntity<NotesResponse>(notesResponse, HttpStatus.OK);
+		return NotesUtil.filterateFields(NotesConstants.NOTE_RESPONSE_FILTER, notesResponse, NotesConstants.NOTE_NAMES_FIELD_STR );
 	}
+	
+	
 }

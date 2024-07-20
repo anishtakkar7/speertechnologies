@@ -5,6 +5,7 @@ import java.time.Instant;
 
 import com.speertechnologies.model.UserNotesId;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
@@ -32,7 +33,7 @@ public class UserNotes implements Serializable {
 	private UserNotesId userNoteId;
 	
 	
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.LAZY,  cascade = CascadeType.REMOVE)
 	@MapsId("noteId")
     @JoinColumn(name = "note_id", nullable = false)
 	private Notes notes;

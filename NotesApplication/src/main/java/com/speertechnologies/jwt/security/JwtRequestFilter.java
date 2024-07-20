@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -13,9 +14,13 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.speertechnologies.exception.UserServiceException;
+
 import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.security.SignatureException;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 @Component
 public class JwtRequestFilter extends OncePerRequestFilter {
@@ -39,7 +44,11 @@ public class JwtRequestFilter extends OncePerRequestFilter {
             try {
                 username = jwtUtil.extractUsername(jwt);
             } catch (ExpiredJwtException e) {
-                logger.warn("JWT token has expired", e);
+            	logger.warn("JWT token has expired", e);
+            }
+            catch(SignatureException ex)
+            {
+            	logger.warn("JWT Signature Exception", ex);
             }
         }
 

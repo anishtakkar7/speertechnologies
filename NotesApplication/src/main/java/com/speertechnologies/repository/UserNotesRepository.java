@@ -26,5 +26,9 @@ public interface UserNotesRepository extends JpaRepository<UserNotes, UserNotesI
 	           "JOIN un.sharedWithUser u " +
 	           "WHERE u.userId = :userId AND n.noteName LIKE %:keyword%")
 	 List<String> findNoteNamesByUserIdAndKeyword(@Param("userId") Long userId, @Param("keyword") String keyword);
+	 
+	 void deleteByNotesAndSharedWithUser(Notes notes, User user);
+	 
+	 Optional<UserNotes> findByUserNoteId(UserNotesId user);
 
 }
