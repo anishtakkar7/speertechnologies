@@ -1,0 +1,25 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://dpg-cqdgj7o8fa8c73dkm1cg-a.oregon-postgres.render.com:5432/notesdb_p05x
+    username: render_postgres
+    password: fWvg8LGCsPQgnKYlCJs1s3wGoJWVURbz
+    # driverClassName: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+  application:
+   name: NotesApplication
+  jackson:
+    serialization:
+      fail-on-empty-beans: false
+
+jwt:
+  header: Authorization
+  secret: mySecret
+  expiration: 604800
+  route:
+    authentication:
+      path: auth
+      refresh: refresh
+      token: check
